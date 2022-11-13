@@ -21,12 +21,8 @@ namespace CSharpConsole
     public Properties Properties { get; private set; }
     public double TotalProgress { get; private set; } = 0.0;
     public double UpdateProgress { get; private set; } = 0.0;
-    private List<MessageIndex> _messages = new List<MessageIndex>();
-
-    private const int MessagePERCENTAGE = -2;
-    private const int MessageNOTFOUND = -1;
-
-    private readonly MessageIndex _MIPercentage = new MessageIndex(string.Empty, MessagePERCENTAGE);
+    private List<Message> Messages = new List<Message>();
+    private string MessagePercentage = string.Empty;
 
     private bool _disposed = false;
 
@@ -54,32 +50,47 @@ namespace CSharpConsole
       else
         TotalProgress += UpdateProgress;
 
-      if (TotalProgress > 100)
+      if (TotalProgress >= 99.99)
         TotalProgress = 100;
       else
         TotalProgress = Math.Round(TotalProgress, 3);
 
       if (Properties.PercentageVisible)
       {
-        SetMessage(_MIPercentage, $"{TotalProgress}{Properties.PercentageChaserText}");
+        MessagePercentage = $"{TotalProgress}{Properties.PercentageChaserText}";
       }
 
       RenderConsoleProgress();
     }
-    public bool SetMessage(string mKey, string message)
+    public void SetMainMessage(string message)
     {
-      var key = GetMessageIndexValue(mKey);
-      if (key != MessageNOTFOUND)
+      Messages[0].Value = $"{Properties.LineIndicator}{message}";
+    }
+    public void SetMessage(string message)
+    {
+      var msg = Messages.Where(e => e.Value == Properties.LineIndicator).FirstOrDefault();
+      if (msg != null)
       {
-        SetMessage(_messages[key], message);
-        return true;
+        Messages[msg.Index].Value = $"{Properties.LineIndicator}{message}";
       }
-      return false;
+      else
+      {
+        for (int i = 1; i < Properties.LinesAvailable; i++)
+        {
+          if (i + 1 == Properties.LinesAvailable)
+            Messages[i].Value = $"{Properties.LineIndicator}{message}";
+          else
+            Messages[i].Value = Messages[i + 1].Value;
+
+        }
+      }
+
+      RenderConsoleProgress();
     }
 
     public void EndConsoleOutput()
     {
-      var numberOfLines = _messages.Count;
+      var numberOfLines = Messages.Count;
       if (Properties.PercentageVisible)
       {
         numberOfLines++;
@@ -112,9 +123,9 @@ namespace CSharpConsole
 
       Console.CursorTop = Properties.StartOnLine;
 
-      for (var i = 0; i < _messages.Count; i++)
+      for (var i = 0; i < Messages.Count; i++)
       {
-        OverwriteConsoleMessage(_messages[i].Message);
+        OverwriteConsoleMessage(Messages[i].Value);
         Console.CursorTop++;
       }
 
@@ -126,7 +137,7 @@ namespace CSharpConsole
       if (Properties.PercentageVisible)
       {
         Console.ForegroundColor = Properties.PercentageColor;
-        OverwriteConsoleMessage(_MIPercentage.Message);
+        OverwriteConsoleMessage(MessagePercentage);
         Console.CursorTop++;
       }
 
@@ -142,27 +153,6 @@ namespace CSharpConsole
       Console.CursorVisible = true;
     }
 
-    private void SetMessage(MessageIndex messageIndex, string message)
-    {
-      messageIndex.Message = $"{Properties.LineIndicator}{message}";
-      RenderConsoleProgress();
-    }
-
-    private int GetMessageIndexValue(string key)
-    {
-      key = key.ToLower();
-
-      for (int index = 0; index < _messages.Count; index++)
-      {
-        var messageIndex = _messages[index];
-        if (messageIndex.Line.Equals(key))
-        {
-          return index;
-        }
-      }
-      return MessageNOTFOUND;
-    }
-
     private void OverwriteConsoleMessage(string message)
     {
       Console.CursorLeft = 0;
@@ -171,7 +161,7 @@ namespace CSharpConsole
       {
         message = $"{message.Substring(0, maxCharacterWidth - Properties.TruncatedIndicator.Length)}{Properties.TruncatedIndicator}";
       }
-      //Pads the message out to reach the maximum character width of the console
+
       message = $"{message}{new string(' ', maxCharacterWidth - message.Length)}";
       Console.Write(message);
     }
@@ -180,22 +170,21 @@ namespace CSharpConsole
     {
       for (int i = 0; i < Properties.LinesAvailable; i++)
       {
-        _messages.Add(new MessageIndex(Properties.LineIndicator, i + 1));
+        Messages.Add(new Message(i, Properties.LineIndicator));
       }
     }
   }
 
 
-  public class MessageIndex
+  public class Message
   {
-    public string Message { get; set; }
+    public int Index { get; private set; }
+    public string Value { get; set; }
 
-    public string Line { get; private set; }
-
-    public MessageIndex(string msg, int index)
+    public Message(int index, string msg)
     {
-      Message = msg;
-      Line = $"line{index}";
+      Index = index;
+      Value = msg;
     }
   }
 }

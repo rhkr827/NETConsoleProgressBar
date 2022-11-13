@@ -12,7 +12,7 @@ namespace CSharpConsole.Test
     {
       for (int i = 0; i < number; i++)
       {
-        Program.ProgressBar.SetMessage($"line2", $"[Update1] Index {i} Updated...");
+        Program.ProgressBar.SetMessage($"[Update1] Index {i} Updated...");
         Program.ProgressBar.SetProgress();
         Thread.Sleep(100);
       }

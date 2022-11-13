@@ -6,34 +6,42 @@ namespace CharpConsole
 {
   public class Program
   {
-    public static ConsoleProgressBar ProgressBar = new ConsoleProgressBar(new Properties());
+    public static ConsoleProgressBar ProgressBar = new ConsoleProgressBar(new Properties() { LinesAvailable = 2 });
 
     static void Main(string[] args)
     {
       Console.Write("Start Test ProcessBar");
-      ProgressBar.UpdateTotalCount(82);
-      ProgressBar.ShowProgressBar();
-      ProgressBar.SetMessage("line1", "Start CSharpConsole App...");
-      ProgressBar.SetMessage("line2", "Execute Command Prompt command 'dir'");
-      StartProcess("dir");
+      for (int line = 2; line <= 10; line++)
+      {
+        ProgressBar = new ConsoleProgressBar(new Properties() { LinesAvailable = line });
+        ProgressBar.UpdateTotalCount(12);
+        ProgressBar.ShowProgressBar();
+        ProgressBar.SetMainMessage($"Start CSharpConsole App  LinesAvailable={line} ...");
+        ProgressBar.SetMessage("Execute Command Prompt command 'dir'");
+        StartProcess("dir");
 
-      ProgressBar.SetProgress();
-      Thread.Sleep(1000);
-      UpdateProcessBar.Run(40);
+        ProgressBar.SetProgress();
+        Thread.Sleep(1000);
+        UpdateProcessBar.Run(5);
 
-      ProgressBar.SetMessage("line2", "Execute Command Prompt command 'tree D:\'");
-      StartProcess("tree D:/");
+        ProgressBar.SetMessage("Execute Command Prompt command 'tree D:\'");
+        StartProcess("tree D:/Utility");
 
-      ProgressBar.SetProgress();
-      Thread.Sleep(1000);
+        ProgressBar.SetProgress();
+        Thread.Sleep(1000);
 
-      UpdateProcessBar2.Run(40);
+        UpdateProcessBar2.Run(5);
 
+        int length = ProgressBar.Properties.LinesAvailable / 2;
+        if (ProgressBar.Properties.LinesAvailable % 2 == 1)
+          length++;
 
-      Console.ReadLine();
-      Console.WriteLine(Environment.NewLine);
-      Console.WriteLine(Environment.NewLine);
-      Console.WriteLine("Done.");
+        for (int i = 0; i < length + 2; i++)
+          Console.WriteLine(Environment.NewLine);
+
+        Console.WriteLine($"Press Any Key {length}");
+        Console.ReadLine();
+      }
     }
 
     static void StartProcess(string command)
